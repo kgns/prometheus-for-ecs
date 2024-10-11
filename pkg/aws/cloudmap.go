@@ -149,6 +149,20 @@ func (c *CloudMapClient) getInstances(serviceSummary *servicediscovery.ServiceSu
 		sdInstance := ServiceDiscoveryInstance{service: serviceSummary.Name, instanceId: instanceSummary.Id, attributes: instanceSummary.Attributes}
 		sdInstaces = append(sdInstaces, &sdInstance)
 	}
+	for getListInstancesOutput.NextToken != nil {
+		getListInstancesOutput, err = c.service.ListInstances(
+			&servicediscovery.ListInstancesInput{
+				ServiceId: serviceSummary.Id,
+				NextToken: getListInstancesOutput.NextToken})
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		for _, instanceSummary := range getListInstancesOutput.Instances {
+			sdInstance := ServiceDiscoveryInstance{service: serviceSummary.Name, instanceId: instanceSummary.Id, attributes: instanceSummary.Attributes}
+			sdInstaces = append(sdInstaces, &sdInstance)
+		}
+	}
 	fmt.Printf("No.of instances discovered for scraping in service '%s' = %d\n", *serviceSummary.Name, len(sdInstaces))
 	return sdInstaces, nil
 }
